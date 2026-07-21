@@ -1,12 +1,10 @@
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
-  output          = "../src/generated/client-db-final-v3"
+  provider = "prisma-client-js"
 }
 
 model Subject {
