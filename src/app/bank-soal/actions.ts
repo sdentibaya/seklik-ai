@@ -1,6 +1,6 @@
 "use server";
 
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { generateBankSoalAI } from "@/lib/llm";
 import { requireUserId } from "@/lib/session";
@@ -15,22 +15,22 @@ export interface GenerateSoalParams {
 export async function getBankSoalSetupData() {
   try {
     const userId = await requireUserId();
-    const activeSetup = await db.classSetup.findUnique({ where: { userId } });
+    const activeSetup = await getDb().classSetup.findUnique({ where: { userId } });
 
-    const subjects = await db.subject.findMany({
+    const subjects = await getDb().subject.findMany({
       orderBy: { name: "asc" },
     });
 
-    const phases = await db.phase.findMany({
+    const phases = await getDb().phase.findMany({
       orderBy: { name: "asc" },
     });
 
-    const tps = await db.tujuanPembelajaran.findMany({
+    const tps = await getDb().tujuanPembelajaran.findMany({
       where: { userId },
       orderBy: { code: "asc" },
     });
 
-    const savedSoalsRaw = await db.bankSoal.findMany({
+    const savedSoalsRaw = await getDb().bankSoal.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
       include: {
@@ -60,7 +60,7 @@ export async function getBankSoalSetupData() {
       ...new Set(savedSoalsRaw.map((s) => s.generateCode).filter(Boolean)),
     ];
 
-    const savedPaketsRaw = await db.paketUjian.findMany({
+    const savedPaketsRaw = await getDb().paketUjian.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
     });
@@ -98,13 +98,13 @@ export async function getBankSoalSetupData() {
 export async function generateSoalAction(params: GenerateSoalParams) {
   try {
     const userId = await requireUserId();
-    const tps = await db.tujuanPembelajaran.findMany({
+    const tps = await getDb().tujuanPembelajaran.findMany({
       where: { id: { in: params.tpIds }, userId },
     });
     if (tps.length === 0) {
       return { success: false, error: "TP tidak valid untuk akun ini." };
     }
-    const phase = await db.phase.findUnique({
+    const phase = await getDb().phase.findUnique({
       where: { id: params.phaseId },
     });
 
@@ -144,12 +144,12 @@ export async function saveSoalsAction(soals: any[], generateCode: string = "") {
     const createdSoals = [];
     for (const soal of soals) {
       if (!soal.tpIds || soal.tpIds.length === 0) continue;
-      const validTps = await db.tujuanPembelajaran.findMany({
+      const validTps = await getDb().tujuanPembelajaran.findMany({
         where: { id: { in: soal.tpIds }, userId },
       });
       if (validTps.length === 0) continue;
 
-      const created = await db.bankSoal.create({
+      const created = await getDb().bankSoal.create({
         data: {
           userId,
           phaseId: soal.phaseId || "",
@@ -188,13 +188,13 @@ export async function savePaketUjianAction(name: string, soalIds: string[]) {
   try {
     const userId = await requireUserId();
     // Only allow soal IDs owned by this user
-    const owned = await db.bankSoal.findMany({
+    const owned = await getDb().bankSoal.findMany({
       where: { userId, id: { in: soalIds } },
       select: { id: true },
     });
     const ownedIds = owned.map((s) => s.id);
 
-    const paket = await db.paketUjian.create({
+    const paket = await getDb().paketUjian.create({
       data: {
         userId,
         name,
@@ -212,11 +212,11 @@ export async function savePaketUjianAction(name: string, soalIds: string[]) {
 export async function deleteSoalAction(id: string) {
   try {
     const userId = await requireUserId();
-    const existing = await db.bankSoal.findFirst({ where: { id, userId } });
+    const existing = await getDb().bankSoal.findFirst({ where: { id, userId } });
     if (!existing) {
       return { success: false, error: "Soal tidak ditemukan." };
     }
-    await db.bankSoal.delete({ where: { id } });
+    await getDb().bankSoal.delete({ where: { id } });
     revalidatePath("/bank-soal");
     return { success: true };
   } catch (error) {
@@ -228,11 +228,11 @@ export async function deleteSoalAction(id: string) {
 export async function deletePaketUjianAction(id: string) {
   try {
     const userId = await requireUserId();
-    const existing = await db.paketUjian.findFirst({ where: { id, userId } });
+    const existing = await getDb().paketUjian.findFirst({ where: { id, userId } });
     if (!existing) {
       return { success: false, error: "Paket tidak ditemukan." };
     }
-    await db.paketUjian.delete({ where: { id } });
+    await getDb().paketUjian.delete({ where: { id } });
     revalidatePath("/bank-soal");
     return { success: true };
   } catch (error) {

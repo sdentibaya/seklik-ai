@@ -1,16 +1,16 @@
 "use server";
 
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { requireUserId } from "@/lib/session";
 
 export async function getSubjectsAndPhases() {
   await requireUserId();
-  const subjects = await db.subject.findMany({
+  const subjects = await getDb().subject.findMany({
     orderBy: { name: "asc" },
   });
 
-  const phases = await db.phase.findMany({
+  const phases = await getDb().phase.findMany({
     orderBy: { name: "asc" },
   });
 
@@ -21,7 +21,7 @@ export async function getCPForSubjectAndPhase(subjectId: string, phaseId: string
   await requireUserId();
   if (!subjectId || !phaseId) return null;
 
-  return await db.capaianPembelajaran.findUnique({
+  return await getDb().capaianPembelajaran.findUnique({
     where: {
       subjectId_phaseId: {
         subjectId,
@@ -38,17 +38,17 @@ export async function getCPForSubjectAndPhase(subjectId: string, phaseId: string
 
 export async function getActiveClassSetup() {
   const userId = await requireUserId();
-  const activeSetup = await db.classSetup.findUnique({
+  const activeSetup = await getDb().classSetup.findUnique({
     where: { userId },
   });
 
   if (!activeSetup) return null;
 
-  const subject = await db.subject.findUnique({
+  const subject = await getDb().subject.findUnique({
     where: { id: activeSetup.subjectId },
   });
 
-  const phase = await db.phase.findUnique({
+  const phase = await getDb().phase.findUnique({
     where: { id: activeSetup.phaseId },
   });
 
@@ -66,7 +66,7 @@ export async function saveClassSetup(subjectId: string, phaseId: string) {
     throw new Error("Subject ID and Phase ID are required.");
   }
 
-  const setup = await db.classSetup.upsert({
+  const setup = await getDb().classSetup.upsert({
     where: { userId },
     update: {
       subjectId,

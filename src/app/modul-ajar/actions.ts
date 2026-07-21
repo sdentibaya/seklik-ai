@@ -1,6 +1,6 @@
 ﻿"use server";
 
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { requireUserId } from "@/lib/session";
 
@@ -60,16 +60,16 @@ export interface GeneratedModulAjar {
 export async function getModulAjarSetupData() {
   try {
     const userId = await requireUserId();
-    const activeSetup = await db.classSetup.findUnique({ where: { userId } });
+    const activeSetup = await getDb().classSetup.findUnique({ where: { userId } });
     if (!activeSetup) {
       return { activeSetup: null, tps: [], cpelements: [], savedModuls: [] };
     }
 
-    const subject = await db.subject.findUnique({ where: { id: activeSetup.subjectId } });
-    const phase = await db.phase.findUnique({ where: { id: activeSetup.phaseId } });
+    const subject = await getDb().subject.findUnique({ where: { id: activeSetup.subjectId } });
+    const phase = await getDb().phase.findUnique({ where: { id: activeSetup.phaseId } });
 
     // Ambil daftar TP yang ada
-    const tps = await db.tujuanPembelajaran.findMany({
+    const tps = await getDb().tujuanPembelajaran.findMany({
       where: {
         userId,
         subjectId: activeSetup.subjectId,
@@ -79,7 +79,7 @@ export async function getModulAjarSetupData() {
     });
 
     // Ambil detail CP per elemen untuk mencocokkan deskripsi CP resmi saat memilih TP
-    const cp = await db.capaianPembelajaran.findUnique({
+    const cp = await getDb().capaianPembelajaran.findUnique({
       where: {
         subjectId_phaseId: {
           subjectId: activeSetup.subjectId,
@@ -94,7 +94,7 @@ export async function getModulAjarSetupData() {
     const cpelements = cp?.elements || [];
 
     // Ambil daftar modul ajar yang sudah disimpan untuk setup aktif ini
-    const savedModuls = await db.modulAjar.findMany({
+    const savedModuls = await getDb().modulAjar.findMany({
       where: {
         userId,
         subjectId: activeSetup.subjectId,
@@ -137,7 +137,7 @@ export async function saveModulAjarAction(
 ) {
   try {
     const userId = await requireUserId();
-    const newModul = await db.modulAjar.create({
+    const newModul = await getDb().modulAjar.create({
       data: {
         userId,
         subjectId,
@@ -162,11 +162,11 @@ export async function saveModulAjarAction(
 export async function deleteModulAjarAction(id: string) {
   try {
     const userId = await requireUserId();
-    const existing = await db.modulAjar.findFirst({ where: { id, userId } });
+    const existing = await getDb().modulAjar.findFirst({ where: { id, userId } });
     if (!existing) {
       return { success: false, error: "Modul Ajar tidak ditemukan" };
     }
-    await db.modulAjar.delete({
+    await getDb().modulAjar.delete({
       where: { id },
     });
     revalidatePath("/modul-ajar");
@@ -446,11 +446,11 @@ Tugas Kelompok:
 export async function updateModulAjarContentAction(id: string, newContentJson: string) {
   try {
     const userId = await requireUserId();
-    const existing = await db.modulAjar.findFirst({ where: { id, userId } });
+    const existing = await getDb().modulAjar.findFirst({ where: { id, userId } });
     if (!existing) {
       return { success: false, error: "Modul Ajar tidak ditemukan." };
     }
-    const updated = await db.modulAjar.update({
+    const updated = await getDb().modulAjar.update({
       where: { id },
       data: {
         content: newContentJson

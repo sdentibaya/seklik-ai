@@ -1,22 +1,22 @@
 "use server";
 
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { requireUserId } from "@/lib/session";
 
 export async function getSettingsData() {
   try {
     const userId = await requireUserId();
-    let school = await db.schoolProfile.findUnique({ where: { userId } });
+    let school = await getDb().schoolProfile.findUnique({ where: { userId } });
     if (!school) {
-      school = await db.schoolProfile.create({
+      school = await getDb().schoolProfile.create({
         data: { userId },
       });
     }
 
-    let user = await db.userProfile.findUnique({ where: { userId } });
+    let user = await getDb().userProfile.findUnique({ where: { userId } });
     if (!user) {
-      user = await db.userProfile.create({
+      user = await getDb().userProfile.create({
         data: { userId },
       });
     }
@@ -35,7 +35,7 @@ export async function saveSchoolProfile(data: {
 }) {
   try {
     const userId = await requireUserId();
-    await db.schoolProfile.upsert({
+    await getDb().schoolProfile.upsert({
       where: { userId },
       update: data,
       create: { userId, ...data },
@@ -51,7 +51,7 @@ export async function saveSchoolProfile(data: {
 export async function saveUserProfile(data: { fullName: string; nip: string }) {
   try {
     const userId = await requireUserId();
-    await db.userProfile.upsert({
+    await getDb().userProfile.upsert({
       where: { userId },
       update: data,
       create: { userId, ...data },

@@ -1,6 +1,6 @@
 ﻿"use server";
 
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { requireUserId } from "@/lib/session";
 
@@ -20,19 +20,19 @@ export interface AllocationItem {
 export async function getPromesData() {
   try {
     const userId = await requireUserId();
-    const activeSetup = await db.classSetup.findUnique({ where: { userId } });
+    const activeSetup = await getDb().classSetup.findUnique({ where: { userId } });
     if (!activeSetup) {
       return { activeSetup: null, tps: [], allocations: [], holidays: [] };
     }
 
-    const subject = await db.subject.findUnique({
+    const subject = await getDb().subject.findUnique({
       where: { id: activeSetup.subjectId },
     });
-    const phase = await db.phase.findUnique({
+    const phase = await getDb().phase.findUnique({
       where: { id: activeSetup.phaseId },
     });
 
-    const tps = await db.tujuanPembelajaran.findMany({
+    const tps = await getDb().tujuanPembelajaran.findMany({
       where: {
         userId,
         subjectId: activeSetup.subjectId,
@@ -41,7 +41,7 @@ export async function getPromesData() {
       orderBy: { order: "asc" },
     });
 
-    const allocations = await db.promesAllocation.findMany({
+    const allocations = await getDb().promesAllocation.findMany({
       where: {
         userId,
         subjectId: activeSetup.subjectId,
@@ -49,7 +49,7 @@ export async function getPromesData() {
       },
     });
 
-    const holidays = await db.calendarHoliday.findMany({
+    const holidays = await getDb().calendarHoliday.findMany({
       where: {
         userId,
         subjectId: activeSetup.subjectId,
@@ -96,7 +96,7 @@ export async function savePromesAllocationsAction(
         ? ["Januari", "Februari", "Maret", "April", "Mei", "Juni"]
         : ["Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 
-    await db.$transaction(async (tx) => {
+    await getDb().$transaction(async (tx) => {
       await tx.promesAllocation.deleteMany({
         where: {
           userId,
@@ -148,7 +148,7 @@ export async function clearHolidaysAction(
         ? ["Januari", "Februari", "Maret", "April", "Mei", "Juni"]
         : ["Juli", "Agustus", "September", "Oktober", "November", "Desember"];
 
-    await db.calendarHoliday.deleteMany({
+    await getDb().calendarHoliday.deleteMany({
       where: {
         userId,
         subjectId,
@@ -301,7 +301,7 @@ PENTING: Hanya kembalikan array JSON saja tanpa teks pembuka atau penutup markdo
     sanitizedHolidays.length > 0 ? sanitizedHolidays : simulatedHolidays;
 
   try {
-    await db.$transaction(async (tx) => {
+    await getDb().$transaction(async (tx) => {
       await tx.calendarHoliday.deleteMany({
         where: {
           userId,
@@ -339,7 +339,7 @@ export async function addManualHolidayAction(
 ) {
   try {
     const userId = await requireUserId();
-    await db.calendarHoliday.upsert({
+    await getDb().calendarHoliday.upsert({
       where: {
         userId_subjectId_phaseId_month_week: {
           userId,

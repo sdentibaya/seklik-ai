@@ -1,6 +1,6 @@
 "use server";
 
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { revalidatePath } from "next/cache";
 import { requireUserId } from "@/lib/session";
 
@@ -14,20 +14,20 @@ export interface GenerateLkpdParams {
 export async function getLkpdSetupDataAction() {
   try {
     const userId = await requireUserId();
-    const activeSetup = await db.classSetup.findUnique({ where: { userId } });
+    const activeSetup = await getDb().classSetup.findUnique({ where: { userId } });
 
-    const phases = await db.phase.findMany({
+    const phases = await getDb().phase.findMany({
       orderBy: { name: "asc" },
     });
 
-    const tps = await db.tujuanPembelajaran.findMany({
+    const tps = await getDb().tujuanPembelajaran.findMany({
       where: activeSetup
         ? { userId, subjectId: activeSetup.subjectId }
         : { userId },
       orderBy: { code: "asc" },
     });
 
-    const savedLkpds = await db.lkpd.findMany({
+    const savedLkpds = await getDb().lkpd.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
       include: {
@@ -116,7 +116,7 @@ export async function saveLkpdAction(
     const userId = await requireUserId();
     // Ensure TPs belong to current user when provided
     if (tpIds && tpIds.length > 0) {
-      const validTps = await db.tujuanPembelajaran.findMany({
+      const validTps = await getDb().tujuanPembelajaran.findMany({
         where: { id: { in: tpIds }, userId },
       });
       if (validTps.length !== tpIds.length) {
@@ -124,7 +124,7 @@ export async function saveLkpdAction(
       }
     }
 
-    const lkpd = await db.lkpd.create({
+    const lkpd = await getDb().lkpd.create({
       data: {
         userId,
         tps: { connect: tpIds.map(id => ({ id })) },
@@ -144,11 +144,11 @@ export async function saveLkpdAction(
 export async function deleteLkpdAction(id: string) {
   try {
     const userId = await requireUserId();
-    const existing = await db.lkpd.findFirst({ where: { id, userId } });
+    const existing = await getDb().lkpd.findFirst({ where: { id, userId } });
     if (!existing) {
       return { success: false, error: "LKPD tidak ditemukan." };
     }
-    await db.lkpd.delete({ where: { id } });
+    await getDb().lkpd.delete({ where: { id } });
     revalidatePath("/lkpd");
     return { success: true };
   } catch (error) {

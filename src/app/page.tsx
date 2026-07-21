@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { getOptionalUserId } from "@/lib/session";
 import { 
   ArrowRight, 
@@ -16,7 +16,7 @@ import {
 export default async function DashboardPage() {
   const userId = await getOptionalUserId();
   const activeSetup = userId
-    ? await db.classSetup.findUnique({ where: { userId } })
+    ? await getDb().classSetup.findUnique({ where: { userId } })
     : null;
 
   let subjectName = "";
@@ -24,10 +24,10 @@ export default async function DashboardPage() {
   let classesInfo = "";
 
   if (activeSetup) {
-    const subject = await db.subject.findUnique({
+    const subject = await getDb().subject.findUnique({
       where: { id: activeSetup.subjectId },
     });
-    const phase = await db.phase.findUnique({
+    const phase = await getDb().phase.findUnique({
       where: { id: activeSetup.phaseId },
     });
     if (subject && phase) {

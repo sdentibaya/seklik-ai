@@ -1,6 +1,6 @@
 "use server";
 
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import { extractTPFromAI } from "@/lib/llm";
 import { getSubjectCode } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
@@ -12,7 +12,7 @@ export async function extractTPFromAIAction(subjectId: string, phaseId: string) 
     throw new Error("Subject ID and Phase ID are required.");
   }
 
-  const cp = await db.capaianPembelajaran.findUnique({
+  const cp = await getDb().capaianPembelajaran.findUnique({
     where: {
       subjectId_phaseId: {
         subjectId,
@@ -42,7 +42,7 @@ export async function extractTPFromAIAction(subjectId: string, phaseId: string) 
     cpElementsInput
   );
 
-  await db.tujuanPembelajaran.deleteMany({
+  await getDb().tujuanPembelajaran.deleteMany({
     where: {
       userId,
       subjectId,
@@ -56,7 +56,7 @@ export async function extractTPFromAIAction(subjectId: string, phaseId: string) 
     const codePrefix = getSubjectCode(cp.subject.name);
     const cleanCode = `TP.${codePrefix}.${String(index + 1).padStart(2, "0")}`;
 
-    const tp = await db.tujuanPembelajaran.create({
+    const tp = await getDb().tujuanPembelajaran.create({
       data: {
         userId,
         subjectId,
@@ -79,7 +79,7 @@ export async function getSavedTPs(subjectId: string, phaseId: string) {
   const userId = await requireUserId();
   if (!subjectId || !phaseId) return [];
 
-  return await db.tujuanPembelajaran.findMany({
+  return await getDb().tujuanPembelajaran.findMany({
     where: {
       userId,
       subjectId,
@@ -109,15 +109,15 @@ export async function saveATPAction(
     throw new Error("Subject ID and Phase ID are required.");
   }
 
-  await db.$transaction([
-    db.tujuanPembelajaran.deleteMany({
+  await getDb().$transaction([
+    getDb().tujuanPembelajaran.deleteMany({
       where: {
         userId,
         subjectId,
         phaseId,
       },
     }),
-    db.tujuanPembelajaran.createMany({
+    getDb().tujuanPembelajaran.createMany({
       data: tps.map((item, index) => ({
         userId,
         subjectId,

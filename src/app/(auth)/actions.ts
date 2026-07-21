@@ -1,12 +1,12 @@
 "use server";
 
-import { db } from "@/lib/db";
+import { getDb } from "@/lib/db";
 import bcrypt from "bcryptjs";
 
 export async function registerUser(formData: FormData) {
   try {
     // Bootstrap only: first account allowed. Further signup closed.
-    const userCount = await db.user.count();
+    const userCount = await getDb().user.count();
     if (userCount > 0) {
       return { error: "Registrasi ditutup. Hubungi admin untuk akun baru." };
     }
@@ -23,7 +23,7 @@ export async function registerUser(formData: FormData) {
       return { error: "Password minimal 8 karakter!" };
     }
 
-    const existingUser = await db.user.findUnique({
+    const existingUser = await getDb().user.findUnique({
       where: { email },
     });
 
@@ -33,7 +33,7 @@ export async function registerUser(formData: FormData) {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    await db.user.create({
+    await getDb().user.create({
       data: {
         name,
         email,
