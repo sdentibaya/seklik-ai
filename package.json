@@ -4,10 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma db push && next build",
     "start": "next start",
-    "lint": "eslint",
-    "deploy": "npx @cloudflare/next-on-pages"
+    "lint": "next lint",
+    "deploy": "vercel deploy --prod"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
