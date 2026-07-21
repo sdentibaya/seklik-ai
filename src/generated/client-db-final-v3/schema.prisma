@@ -1,0 +1,233 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+  output          = "../src/generated/client-db-final-v3"
+}
+
+model Subject {
+  id                   String                @id @default(uuid())
+  name                 String                @unique
+  description          String?
+  capaianPembelajarans CapaianPembelajaran[]
+}
+
+model Phase {
+  id                   String                @id @default(uuid())
+  name                 String                @unique // "A", "B", "C"
+  description          String?
+  classes              String // e.g., "Kelas 1-2"
+  capaianPembelajarans CapaianPembelajaran[]
+  bankSoals            BankSoal[]
+}
+
+model CapaianPembelajaran {
+  id        String @id @default(uuid())
+  subjectId String
+  phaseId   String
+  content   String
+
+  subject  Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  phase    Phase       @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  elements CPElement[]
+
+  @@unique([subjectId, phaseId])
+}
+
+model CPElement {
+  id                    String @id @default(uuid())
+  capaianPembelajaranId String
+  name                  String
+  content               String
+
+  capaianPembelajaran CapaianPembelajaran @relation(fields: [capaianPembelajaranId], references: [id], onDelete: Cascade)
+}
+
+// Per-user active class setup (PK = userId)
+model ClassSetup {
+  userId    String   @id
+  subjectId String
+  phaseId   String
+  updatedAt DateTime @updatedAt
+}
+
+model TujuanPembelajaran {
+  id                String             @id @default(uuid())
+  userId            String
+  subjectId         String
+  phaseId           String
+  code              String
+  element           String
+  description       String
+  order             Int
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  promesAllocations PromesAllocation[]
+  lkpds             Lkpd[]
+  bankSoals         BankSoal[]
+  modulAjars        ModulAjar[]
+
+  @@unique([userId, subjectId, phaseId, code])
+  @@index([userId])
+}
+
+model PromesAllocation {
+  id                   String             @id @default(uuid())
+  userId               String
+  subjectId            String
+  phaseId              String
+  tujuanPembelajaranId String
+  month                String
+  week                 Int
+  jp                   Int
+  tujuanPembelajaran   TujuanPembelajaran @relation(fields: [tujuanPembelajaranId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, subjectId, phaseId, tujuanPembelajaranId, month, week])
+  @@index([userId])
+}
+
+model CalendarHoliday {
+  id          String @id @default(uuid())
+  userId      String
+  subjectId   String
+  phaseId     String
+  month       String
+  week        Int
+  description String
+
+  @@unique([userId, subjectId, phaseId, month, week])
+  @@index([userId])
+}
+
+model ModulAjar {
+  id        String               @id @default(uuid())
+  userId    String
+  subjectId String
+  phaseId   String
+  tps       TujuanPembelajaran[]
+  title     String
+  metadata  String
+  content   String
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+  lkpds     Lkpd[]
+
+  @@index([userId])
+}
+
+model Lkpd {
+  id          String               @id @default(uuid())
+  userId      String
+  modulAjarId String?
+  tps         TujuanPembelajaran[]
+  type        String
+  difficulty  String
+  content     String
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  modulAjar ModulAjar? @relation(fields: [modulAjarId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model BankSoal {
+  id              String               @id @default(uuid())
+  userId          String
+  phaseId         String
+  tps             TujuanPembelajaran[]
+  cognitiveLevel  String
+  akmType         String
+  stimulus        String?
+  pertanyaan      String
+  options         String?
+  kunciJawaban    String
+  rubrikPenilaian String?
+  generateCode    String?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  phase Phase @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model PaketUjian {
+  id        String   @id @default(uuid())
+  userId    String
+  name      String
+  soalIds   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// Per-user school profile (PK = userId)
+model SchoolProfile {
+  userId         String   @id
+  schoolName     String   @default("SD Negeri 3 Pringgabaya")
+  headmasterName String   @default("Nama Kepala Sekolah")
+  headmasterNip  String   @default("NIP Kepala Sekolah")
+  updatedAt      DateTime @updatedAt
+}
+
+// Per-user teacher profile (PK = userId)
+model UserProfile {
+  userId    String   @id
+  fullName  String   @default("Nama Guru, S.Pd.")
+  nip       String?  @default("")
+  updatedAt DateTime @updatedAt
+}
+
+// NextAuth Tables
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          String?   @default("user")
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}

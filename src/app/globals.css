@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+:root {
+  --background: #F8FAFC;
+  --foreground: #1E293B;
+  --card: #FFFFFF;
+  --border: #E2E8F0;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+  
+  --color-gemini-blue: #1e3a8a;
+  --color-gemini-blue-hover: #1e40af;
+  --color-dark-blue: #0D47A1;
+  --color-dark-blue-hover: #0A3A82;
+  --color-light-gray: #F8FAFC;
+  --color-card-bg: var(--card);
+  --color-border-gray: var(--border);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+/* Custom scrollbar to keep it modern and clean */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Styles for dynamically injected HTML tables (e.g. from LLM) */
+.print-table-wrapper table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+.print-table-wrapper th,
+.print-table-wrapper td {
+  border: 1px solid #1E293B; /* Black/Dark Gray border */
+  padding: 0.5rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.print-table-wrapper th {
+  background-color: #F8FAFC;
+  font-weight: bold;
+}
+

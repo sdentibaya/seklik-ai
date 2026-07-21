@@ -1,0 +1,9 @@
+name = "seklik-ai-pages"
+compatibility_date = "2024-04-01"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".vercel/output/static"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "seklik-db"
+database_id = "33e9ce62-2080-455a-b1a9-6241dd748527"

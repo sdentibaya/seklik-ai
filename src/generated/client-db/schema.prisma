@@ -1,0 +1,92 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/client-db"
+}
+
+model Subject {
+  id                   String                @id @default(uuid())
+  name                 String                @unique
+  description          String?
+  capaianPembelajarans CapaianPembelajaran[]
+}
+
+model Phase {
+  id                   String                @id @default(uuid())
+  name                 String                @unique // "A", "B", "C"
+  description          String?
+  classes              String // e.g., "Kelas 1-2"
+  capaianPembelajarans CapaianPembelajaran[]
+}
+
+model CapaianPembelajaran {
+  id        String @id @default(uuid())
+  subjectId String
+  phaseId   String
+  content   String // Teks CP utama secara keseluruhan
+
+  subject  Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  phase    Phase       @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  elements CPElement[]
+
+  @@unique([subjectId, phaseId])
+}
+
+model CPElement {
+  id                    String @id @default(uuid())
+  capaianPembelajaranId String
+  name                  String // Nama elemen (e.g. "Bilangan", "Aljabar")
+  content               String // Deskripsi/isi CP untuk elemen tersebut
+
+  capaianPembelajaran CapaianPembelajaran @relation(fields: [capaianPembelajaranId], references: [id], onDelete: Cascade)
+}
+
+model ClassSetup {
+  id        String   @id @default("active-setup")
+  subjectId String
+  phaseId   String
+  updatedAt DateTime @updatedAt
+}
+
+model TujuanPembelajaran {
+  id                String             @id @default(uuid())
+  subjectId         String
+  phaseId           String
+  code              String // e.g., "TP-01"
+  element           String // e.g., "Bilangan"
+  description       String // Isi teks TP
+  order             Int // Urutan dalam ATP
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  promesAllocations PromesAllocation[]
+
+  @@unique([subjectId, phaseId, code])
+}
+
+model PromesAllocation {
+  id                   String             @id @default(uuid())
+  subjectId            String
+  phaseId              String
+  tujuanPembelajaranId String
+  month                String // "Juli", "Agustus", dsb.
+  week                 Int // 1, 2, 3, 4, 5
+  jp                   Int // Jam Pelajaran (JP) yang dialokasikan
+  tujuanPembelajaran   TujuanPembelajaran @relation(fields: [tujuanPembelajaranId], references: [id], onDelete: Cascade)
+
+  @@unique([subjectId, phaseId, tujuanPembelajaranId, month, week])
+}
+
+model CalendarHoliday {
+  id          String @id @default(uuid())
+  subjectId   String
+  phaseId     String
+  month       String // "Juli", dsb.
+  week        Int // 1 - 5
+  description String // e.g., "Libur Kemerdekaan"
+
+  @@unique([subjectId, phaseId, month, week])
+}
