@@ -4,7 +4,7 @@ export function getR2Bucket() {
   // Mengambil instance R2 dari Request Context (Cloudflare Edge Runtime)
   // Harus dipanggil di dalam fungsi (misal di dalam Server Actions atau API Route)
   try {
-    const { env } = getRequestContext();
+    const env: any = getRequestContext().env;
     if (!env || !env.R2) {
       throw new Error("R2 bucket binding tidak ditemukan di env.");
     }

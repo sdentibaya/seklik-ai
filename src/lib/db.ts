@@ -8,7 +8,7 @@ export function getDb() {
   if (process.env.NODE_ENV === "development") {
     if (!prisma) {
        try {
-         const { env } = getRequestContext();
+         const env: any = getRequestContext().env;
          if (env && env.DB) {
            const adapter = new PrismaD1(env.DB);
            prisma = new PrismaClient({ adapter });
@@ -25,7 +25,7 @@ export function getDb() {
   // Production (Cloudflare Pages)
   if (!prisma) {
     try {
-      const { env } = getRequestContext();
+      const env: any = getRequestContext().env;
       const adapter = new PrismaD1(env.DB);
       prisma = new PrismaClient({ adapter });
     } catch (error) {
