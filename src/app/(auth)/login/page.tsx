@@ -33,8 +33,10 @@ export default function LoginPage() {
       if (res?.error) {
         setError("Email atau password salah.");
       } else {
-        router.push("/setup");
-        router.refresh();
+        // Memaksa browser muat ulang agar status sesi (cookie) terbaru terbaca
+        const searchParams = new URLSearchParams(window.location.search);
+        const callbackUrl = searchParams.get("callbackUrl");
+        window.location.href = callbackUrl || "/setup";
       }
     });
   };
