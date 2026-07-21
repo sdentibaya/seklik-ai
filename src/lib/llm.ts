@@ -1,4 +1,4 @@
-﻿import { getSubjectCode } from "./utils";
+import { getSubjectCode } from "./utils";
 
 interface CPElementInput {
   name: string;
@@ -25,7 +25,9 @@ export async function extractTPFromAI(
 Mata Pelajaran: ${subjectName}
 Fase: ${phaseName} (${classesInfo})
 
-Tugas Anda adalah merumuskan Tujuan Pembelajaran (TP) dari Capaian Pembelajaran (CP) per elemen yang kami berikan.
+Tugas Anda adalah membedah dan merumuskan Tujuan Pembelajaran (TP) dari Capaian Pembelajaran (CP) per elemen yang kami berikan.
+PENTING: CP ini mencakup seluruh cakupan 1 Fase (2 tahun ajaran). Oleh karena itu, Anda WAJIB menjabarkan dan memecah 1 Elemen menjadi 2 hingga 4 TP yang berjenjang (dari mudah ke sulit). 
+Sehingga total keseluruhan TP yang dihasilkan dari seluruh elemen minimal berjumlah 8-12 TP.
 Buat TP yang konkret, spesifik, operasional, dan dapat diukur. TP harus menggunakan kata kerja operasional (KKO) seperti: memahami, mengidentifikasi, menganalisis, menyajikan, dsb.
 
 Format kode TP harus berupa: TP.${codePrefix}.[Nomor Urut 2 Digit].
