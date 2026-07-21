@@ -1,6 +1,8 @@
-import { PrismaClient } from "@prisma/client";
+import { config } from "dotenv";
+config();
+import { getDb } from "../src/lib/db";
 
-const prisma = new PrismaClient();
+const prisma = getDb();
 
 async function main() {
   console.log("Cleaning database...");

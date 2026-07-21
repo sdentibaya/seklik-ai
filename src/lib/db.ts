@@ -1,38 +1,17 @@
 import { PrismaClient } from "@prisma/client";
-import { PrismaD1 } from "@prisma/adapter-d1";
-import { getRequestContext } from "@cloudflare/next-on-pages";
+import { PrismaLibSQL } from "@prisma/adapter-libsql";
+import { createClient } from "@libsql/client";
 
 let prisma: PrismaClient | undefined;
 
 export function getDb() {
-  if (process.env.NODE_ENV === "development") {
-    if (!prisma) {
-       try {
-         const env: any = getRequestContext().env;
-         if (env && env.DB) {
-           const adapter = new PrismaD1(env.DB);
-           prisma = new PrismaClient({ adapter });
-         } else {
-           prisma = new PrismaClient();
-         }
-       } catch (e) {
-         prisma = new PrismaClient();
-       }
-    }
-    return prisma;
-  }
-
-  // Production (Cloudflare Pages)
   if (!prisma) {
-    try {
-      const env: any = getRequestContext().env;
-      const adapter = new PrismaD1(env.DB);
-      prisma = new PrismaClient({ adapter });
-    } catch (error) {
-      console.error("Failed to init Prisma D1:", error);
-      prisma = new PrismaClient();
-    }
+    const libsql = createClient({
+      url: process.env.DATABASE_URL as string,
+      authToken: process.env.TURSO_AUTH_TOKEN as string,
+    });
+    const adapter = new PrismaLibSQL(libsql);
+    prisma = new PrismaClient({ adapter });
   }
-
   return prisma;
 }

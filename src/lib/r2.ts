@@ -1,16 +1,21 @@
-import { getRequestContext } from "@cloudflare/next-on-pages";
+import { S3Client } from "@aws-sdk/client-s3";
+
+let r2: S3Client | undefined;
 
 export function getR2Bucket() {
-  // Mengambil instance R2 dari Request Context (Cloudflare Edge Runtime)
-  // Harus dipanggil di dalam fungsi (misal di dalam Server Actions atau API Route)
-  try {
-    const env: any = getRequestContext().env;
-    if (!env || !env.R2) {
-      throw new Error("R2 bucket binding tidak ditemukan di env.");
+  if (!r2) {
+    if (!process.env.R2_ACCOUNT_ID || !process.env.R2_ACCESS_KEY_ID || !process.env.R2_SECRET_ACCESS_KEY) {
+      throw new Error("R2 Credentials are not set in environment variables.");
     }
-    return env.R2 as any; // Tipe disesuaikan dengan Cloudflare Workers KV/R2 Namespace
-  } catch (e) {
-    console.error("Gagal mendapatkan konteks R2:", e);
-    throw e;
+    
+    r2 = new S3Client({
+      region: "auto",
+      endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+      credentials: {
+        accessKeyId: process.env.R2_ACCESS_KEY_ID,
+        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+      },
+    });
   }
+  return r2;
 }
